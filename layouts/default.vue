@@ -5,9 +5,36 @@
         {{ title }}
       </v-toolbar-title>
       <v-spacer />
-      <v-btn color="primary" elevation="1"> Login </v-btn>
-      <v-divider class="mx-4" vertical></v-divider>
-      <v-btn color="primary" elevation="1" outlined> Register </v-btn>
+      <v-btn
+        v-if="$store.state.user.loggedIn"
+        color="primary"
+        elevation="1"
+        outlined
+        @click.prevent="logout()"
+        >Logout</v-btn
+      >
+      <v-btn
+        v-if="!$store.state.user.loggedIn"
+        color="primary"
+        elevation="1"
+        to="/user/login"
+      >
+        Login
+      </v-btn>
+      <v-divider
+        v-if="!$store.state.user.loggedIn"
+        class="mx-4"
+        vertical
+      ></v-divider>
+      <v-btn
+        v-if="!$store.state.user.loggedIn"
+        color="primary"
+        elevation="1"
+        outlined
+        to="/user/register"
+      >
+        Register
+      </v-btn>
     </v-app-bar>
     <v-main>
       <v-container>
@@ -26,8 +53,13 @@ export default {
   data() {
     return {
       fixed: false,
-      title: 'Animu',
+      title: 'iO (Animu next generation)',
     }
+  },
+  methods: {
+    async logout() {
+      await this.$store.dispatch('user/logOut')
+    },
   },
 }
 </script>

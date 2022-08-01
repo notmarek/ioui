@@ -2,6 +2,12 @@ export const state = () => ({
   siteInfo: null,
 })
 
+export const mutations = {
+  setSiteInfo(state, info) {
+    state.siteInfo = info
+  },
+}
+
 export const getter = {
   getSiteInfo(state) {
     return state.siteInfo
@@ -9,10 +15,10 @@ export const getter = {
 }
 
 export const actions = {
-  async fetchSiteInfo(state) {
-    if (state.siteInfo) return state.siteInfo
+  async fetchSiteInfo(ctx) {
+    if (ctx.state.siteInfo) return ctx.state.siteInfo
     const res = await this.$axios.get('/na/info')
-    state.apiInfo = res.data
+    ctx.commit('setSiteInfo', res.data)
     return res.data
   },
 }

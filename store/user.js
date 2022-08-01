@@ -1,5 +1,5 @@
 export const state = () => ({
-  loggedIn: false,
+  loggedIn: (localStorage.getItem('jwt') && true) || false,
   userInfo: null,
 })
 
@@ -18,6 +18,7 @@ export const mutations = {
   },
   logOut(state) {
     state.loggedIn = false
+    state.userInfo = null
   },
   setUserInfo(state, info) {
     state.userInfo = info
@@ -25,27 +26,43 @@ export const mutations = {
 }
 
 export const actions = {
-  async fetchApiInfo(state) {
-    const res = await this.$axios.get('/api/3')
-
-    state.apiInfo = res.data
+  logOut(ctx) {
+    localStorage.removeItem('jwt')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('expiration')
+    ctx.commit('logOut')
+  },
+  async logIn(ctx, { username, password }) {
+    const res = await this.$axios.post('/na/user', {
+      username,
+      password,
+      identifier: 'password',
+    })
+    if (res.data.status === 'ok') {
+      localStorage.setItem('jwt', res.data.token)
+      localStorage.setItem('refresh_token', res.data.refresh_token)
+      localStorage.setItem('expiration', res.data.expiration)
+      ctx.dispatch('fetchUserInfo')
+    }
     return res.data
   },
-  async fetchUserInfo(state) {
+  async fetchUserInfo(ctx) {
     const res = await this.$axios
-      .get('/api/3/user', {
+      .get('/api/user/@me', {
         headers: {
-          authorization: `Bearer ${localStorage.getItem('bak-token')}`,
+          authorization: `Bearer ${localStorage.getItem('jwt')}`,
         },
       })
       .catch((_) => {
+        ctx.commit('logOut')
         return [false, null]
       })
     if (res.status === 200) {
-      state.loggedIn = true
-      state.userInfo = res.data
-      return [true, res.data.FullName]
+      ctx.commit('logIn')
+      ctx.commit('setUserInfo', res.data)
+      return [true, res.data]
     }
+    ctx.commit('logOut')
     return [false, null]
   },
 }
